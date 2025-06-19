@@ -2,6 +2,8 @@
 
 This repository demonstrates a minimal setup for a worker service using **.NET 9**.
 The service, `DirectorySyncWorker`, processes background jobs that keep directories in sync across environments.
+It now includes a reusable library called `MetricsPipeline.Core` that provides drive
+scanning and directory comparison helpers.
 
 ## Prerequisites
 - .NET 9 SDK (install via `dotnet-install.sh` or from the official [download page](https://aka.ms/dotnet-download))
@@ -14,7 +16,24 @@ The service, `DirectorySyncWorker`, processes background jobs that keep director
 3. Run the worker with `dotnet run --project DirectorySyncWorker`.
 4. Execute tests and generate coverage: `dotnet test --collect:"XPlat Code Coverage"`.
 5. Disable telemetry during builds by setting `DOTNET_CLI_TELEMETRY_OPTOUT=1`.
+6. Build the core library alone via `dotnet build MetricsPipeline.Core` if desired.
+7. To scan a drive programmatically, inject an `IDriveScanner` implementation and
+   use the provided `DriveScannerWorker` for scheduled scans.
 
 This solution serves as a starting point for building background services.
 Refer to the [.NET 9 release notes](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-9) for new features.
 Feel free to extend it with your own business logic and tests.
+
+## Project Structure
+- **DirectorySyncWorker** – executable worker service.
+- **MetricsPipeline.Core** – contains interfaces like `IDriveScanner` and
+  `IDirectoryComparer` plus model records for comparison results.
+- Worker classes reside under `MetricsPipeline.Core/Infrastructure/Workers` so
+  they can be shared across services.
+
+### Directory Scanning Example
+```csharp
+var scanner = serviceProvider.GetRequiredService<IDriveScanner>();
+var counts = await scanner.GetCountsAsync("/data");
+Console.WriteLine($"Files: {counts.FileCount}, Dirs: {counts.DirectoryCount}");
+```
