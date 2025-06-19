@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
+
 using Microsoft.Extensions.Logging;
 
 namespace MetricsPipeline.Core;

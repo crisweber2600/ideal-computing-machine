@@ -22,8 +22,8 @@ public class DirectoryScannerSteps
         };
         var children = new Dictionary<string, DirectoryEntry[]>
         {
-            ["root"] = new[]{ new DirectoryEntry("c1","c1"), new DirectoryEntry("c2","c2") },
-            ["c1"] = new[]{ new DirectoryEntry("c1a","c1a") },
+            ["root"] = new[]{ new DirectoryEntry("c1","c1", null), new DirectoryEntry("c2","c2", null) },
+            ["c1"] = new[]{ new DirectoryEntry("c1a","c1a", null) },
             ["c1a"] = Array.Empty<DirectoryEntry>(),
             ["c2"] = Array.Empty<DirectoryEntry>()
         };

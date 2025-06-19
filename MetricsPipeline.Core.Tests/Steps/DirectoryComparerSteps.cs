@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
-using Microsoft.Extensions.Logging.Abstractions;
 using FluentAssertions;
 using Reqnroll;
 using MetricsPipeline.Core;
@@ -66,20 +65,18 @@ public void Dispose()
     }
 }
 
-internal sealed class LocalScanner : IDriveScanner
+internal class FileSystemScanner : IDriveScanner
 {
     public Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
-    {
-        var entries = Directory.EnumerateDirectories(rootPath)
-            .Select(d => new DirectoryEntry(d, Path.GetFileName(d)));
-        return Task.FromResult<IEnumerable<DirectoryEntry>>(entries.ToArray());
-    }
+        => Task.FromResult<IEnumerable<DirectoryEntry>>(Directory.EnumerateDirectories(rootPath)
+            .Select(d => new DirectoryEntry(d, d, null)));
 
     public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
     {
-        var files = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
-        var dirs = Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories);
-        long bytes = files.Sum(f => new FileInfo(f).Length);
-        return Task.FromResult(new DirectoryCounts(files.Count(), dirs.Count(), bytes));
+        int files = Directory.GetFiles(path).Length;
+        int dirs = Directory.GetDirectories(path).Length;
+        long bytes = Directory.EnumerateFiles(path).Sum(f => new FileInfo(f).Length);
+        return Task.FromResult(new DirectoryCounts(files, dirs, bytes));
+
     }
 }

@@ -1,6 +1,6 @@
 namespace MetricsPipeline.Core;
 
-public record DirectoryEntry(string Id, string Name);
+public record DirectoryEntry(string Id, string Name, string? QuickXorHash = null);
 
 public interface IDriveScanner
 {

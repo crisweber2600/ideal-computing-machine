@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using System.Collections.Generic;
 using Polly;
 using Polly.Retry;
 using System.Collections.Concurrent;
@@ -94,6 +95,15 @@ public class GraphScanner : IDriveScanner
         {
             foreach (var item in page.Value)
             {
+                if (item.File != null)
+                {
+                    var hash = item.File.Hashes?.QuickXorHash;
+                    if (hash != null)
+                    {
+                        item.AdditionalData ??= new Dictionary<string, object>();
+                        item.AdditionalData["QuickXorHash"] = hash;
+                    }
+                }
                 yield return item;
             }
         }
