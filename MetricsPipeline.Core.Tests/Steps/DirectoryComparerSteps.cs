@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using FluentAssertions;
 using Reqnroll;
 using MetricsPipeline.Core;
@@ -26,13 +27,13 @@ public class DirectoryComparerSteps : IDisposable
         Directory.CreateDirectory(_destination);
     }
 
-    [Given("the source directory contains \"(.*)\" with (\d+) bytes")]
+    [Given(@"the source directory contains ""(.*)"" with (\d+) bytes")]
     public void GivenSourceFile(string name, int bytes)
     {
         File.WriteAllBytes(Path.Combine(_source, name), new byte[bytes]);
     }
 
-    [Given("the destination directory contains \"(.*)\" with (\d+) bytes")]
+    [Given(@"the destination directory contains ""(.*)"" with (\d+) bytes")]
     public void GivenDestinationFile(string name, int bytes)
     {
         File.WriteAllBytes(Path.Combine(_destination, name), new byte[bytes]);
@@ -41,7 +42,7 @@ public class DirectoryComparerSteps : IDisposable
     [When("I compare the source and destination directories")]
     public async Task WhenICompare()
     {
-        var comparer = new DirectoryComparer(new DirectoryScanner());
+        var comparer = new DirectoryComparer(new FileSystemScanner());
         _rows = (await comparer.CompareAsync(_source, _destination)).ToList();
     }
 
@@ -53,9 +54,24 @@ public class DirectoryComparerSteps : IDisposable
         _rows.Should().ContainSingle(r => r is SizeMismatchRow);
     }
 
-    public void Dispose()
+public void Dispose()
     {
         if (Directory.Exists(_root))
             Directory.Delete(_root, true);
+    }
+}
+
+internal class FileSystemScanner : IDriveScanner
+{
+    public Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<DirectoryEntry>>(Directory.EnumerateDirectories(rootPath)
+            .Select(d => new DirectoryEntry(d, d, null)));
+
+    public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
+    {
+        int files = Directory.GetFiles(path).Length;
+        int dirs = Directory.GetDirectories(path).Length;
+        long bytes = Directory.EnumerateFiles(path).Sum(f => new FileInfo(f).Length);
+        return Task.FromResult(new DirectoryCounts(files, dirs, bytes));
     }
 }
