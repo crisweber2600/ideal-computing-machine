@@ -141,31 +141,52 @@ await worker.StartAsync();
 
 Run the CLI from the repository root:
 
+
 ```bash
 dotnet run --project MetricsCli -- \
   --ms-root <drive-id> --google-root <folder-id> \
   --google-auth creds.json --output mismatches.csv \
-  --max-dop 4
+  --follow-shortcuts --max-dop 4
 ```
 
-### Options
-* `--ms-root` – Microsoft Graph path or ID to scan.
+**Options**
+
+* `--ms-root` – Microsoft Graph path or drive ID to scan.
 * `--google-root` – Google Drive folder to compare.
-* `--google-auth` – path to OAuth credentials JSON (defaults to `GOOGLE_AUTH`).
+* `--google-auth` – path to OAuth credentials JSON.
 * `--output` – CSV file for mismatch results.
 * `--max-dop` – maximum concurrency for API calls.
+* `--follow-shortcuts` – recursively resolve Google shortcuts that point to
+  folders.
 
-Currently the tool compares a single pair of roots and only counts folders and
-files. It does not yet validate file content or sizes.
+## Docker usage
 
-## Testing and Coverage
-
-Execute the full test suite with coverage collection:
+Container images can be built for automated deployments:
 
 ```bash
-dotnet test --collect:"XPlat Code Coverage"
+docker build -t metrics .
+docker run --rm \
+  -e AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  -e AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  -e AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
+  -e GOOGLE_AUTH=/secrets/creds.json \
+  metrics --ms-root <drive-id> --google-root <folder-id>
 ```
 
-Coverage reports are written to `MetricsPipeline.Core.Tests/TestResults` in
-`coverage.cobertura.xml`. Use `reportgenerator` or a similar tool to produce an
-HTML summary. Aim for coverage above 80% to catch regressions.
+Ensure your credentials file is mounted or baked into the container image. When
+running in Docker set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` to suppress
+locale warnings.
+
+## Testing
+
+Run the full test suite including coverage collection:
+
+```bash
+dotnet test --no-build --no-restore --collect:"XPlat Code Coverage"
+```
+
+CI executions use the same command and expect coverage above 80%. Coverage
+reports are written to `MetricsPipeline.Core.Tests/TestResults` as
+`coverage.cobertura.xml` and can be converted to HTML with tools like
+`reportgenerator`.
+
