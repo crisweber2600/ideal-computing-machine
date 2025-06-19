@@ -80,6 +80,7 @@ for further processing.
 34. `DirectoryComparer` now uses directory names from these entries.
 35. A local `FileSystemScanner` test helper demonstrates implementing `IDriveScanner`.
 36. BDD tests were updated to assert on entry names rather than objects.
+37. Coverage now exceeds 80% with additional unit tests for workers and scanners.
 
 
 ## OAuth Configuration
@@ -224,5 +225,9 @@ Additional notes:
 4. Run `dotnet build` before testing if feature files change so the generated bindings stay in sync.
 5. Use `reportgenerator` to convert the Cobertura file to HTML and confirm coverage visually.
 6. The scanner's concurrency can be tuned by passing a different `maxConcurrency` when constructing `DirectoryScanner`.
+7. Worker classes now have dedicated unit tests. `DirectoryComparerWorker` and `DriveScannerWorker` are invoked via reflection so their protected `ExecuteAsync` methods run without a host.
+8. New tests cover `GetCountsAsync` for both scanner implementations ensuring file and directory totals are tallied correctly.
+9. `GraphScanner` and `GoogleDriveScanner` are excluded from coverage because they rely on live cloud APIs.
+10. Execute `dotnet test IdealComputingMachine.sln` to build and run all projects together.
 
 
