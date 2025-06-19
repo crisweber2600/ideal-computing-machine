@@ -1,4 +1,5 @@
 # Ideal Computing Machine
+![CI](https://github.com/OWNER/ideal-computing-machine/actions/workflows/ci.yml/badge.svg)
 
 This repository demonstrates a minimal setup for a worker service using **.NET 9**.
 The service, `DirectorySyncWorker`, processes background jobs that keep directories in sync across environments.
@@ -66,6 +67,11 @@ for further processing.
 28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
 29. Configure OAuth credentials for Microsoft and Google before running scanners.
 30. The CLI now supports environment variables for secret management.
+31. A root `Dockerfile` builds and publishes `MetricsCli` for container use.
+32. Build the image with `docker build -t metrics-cli .`.
+33. Supply `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` at runtime.
+34. Mount your Google credentials and pass `GOOGLE_AUTH` when running the container.
+35. The CI workflow executes tests on every push and pull request.
 
 ## OAuth Configuration
 
@@ -164,3 +170,23 @@ dotnet test --collect:"XPlat Code Coverage"
 Coverage reports are written to `MetricsPipeline.Core.Tests/TestResults` in
 `coverage.cobertura.xml`. Use `reportgenerator` or a similar tool to produce an
 HTML summary. Aim for coverage above 80% to catch regressions.
+
+## Docker Image
+
+Build the containerised CLI from the repository root:
+
+```bash
+docker build -t metrics-cli .
+```
+
+Run the image with your secret environment variables supplied at runtime:
+
+```bash
+docker run --rm \
+  -e AZURE_CLIENT_ID=... \
+  -e AZURE_CLIENT_SECRET=... \
+  -e AZURE_TENANT_ID=... \
+  -e GOOGLE_AUTH=/secrets/google.json \
+  -v $(pwd)/secrets:/secrets \
+  metrics-cli --ms-root <drive-id> --google-root <folder-id>
+```
