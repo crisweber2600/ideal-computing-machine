@@ -53,6 +53,11 @@ for further processing.
 16. A new feature file exercises the comparer so coverage remains high.
 17. Example scripts now show how to pipe mismatches to a CSV file.
 18. The README clarifies installing the .NET 9 preview SDK for this project.
+19. The new `MetricsCli` tool runs the comparison pipeline from the command line.
+20. Provide Microsoft and Google root IDs via `--ms-root` and `--google-root`.
+21. Pass Google credentials with `--google-auth` or set the `GOOGLE_AUTH` environment variable.
+22. Use `--output` to write mismatches to a CSV file.
+23. Limit concurrency with the `--max-dop` option.
 
 ### Graph Scanning Example
 ```csharp

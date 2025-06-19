@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../MetricsPipeline.Core/MetricsPipeline.Core.csproj" />
+    <ProjectReference Include="../MetricsCli/MetricsCli.csproj" />
   </ItemGroup>
 
   <ItemGroup>
