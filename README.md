@@ -66,6 +66,11 @@ for further processing.
 28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
 29. Configure OAuth credentials for Microsoft and Google before running scanners.
 30. The CLI now supports environment variables for secret management.
+31. `DirectoryScanner` provides local folder enumeration for comparisons.
+32. `DirectoryComparer` checks two paths and reports missing or mismatched files.
+33. `DirectoryComparerWorker` logs these issues when run as a background service.
+34. A new feature file verifies the comparer end to end using temporary folders.
+35. Unit tests confirm the comparer interacts with the scanner through Moq.
 
 ## OAuth Configuration
 
@@ -136,6 +141,7 @@ await worker.StartAsync();
 
 Run the CLI from the repository root:
 
+
 ```bash
 dotnet run --project MetricsCli -- \
   --ms-root <drive-id> --google-root <folder-id> \
@@ -143,10 +149,11 @@ dotnet run --project MetricsCli -- \
   --max-dop 4 --follow-shortcuts
 ```
 
-### Options
-* `--ms-root` – Microsoft Graph path or ID to scan.
+**Options**
+
+* `--ms-root` – Microsoft Graph path or drive ID to scan.
 * `--google-root` – Google Drive folder to compare.
-* `--google-auth` – path to OAuth credentials JSON (defaults to `GOOGLE_AUTH`).
+* `--google-auth` – path to OAuth credentials JSON.
 * `--output` – CSV file for mismatch results.
 * `--max-dop` – maximum concurrency for API calls.
 * `--follow-shortcuts` – resolve folder shortcuts in Google Drive.
@@ -155,15 +162,26 @@ When this flag is enabled the scanner treats Drive shortcuts to folders as real
 directories. The credentials path can also be provided via the `GOOGLE_AUTH`
 environment variable if `--google-auth` is omitted.
 
-Currently the tool compares a single pair of roots and only counts folders and
-files. It does not yet validate file content or sizes.
+```bash
+docker build -t metrics .
+docker run --rm \
+  -e AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+  -e AZURE_TENANT_ID=$AZURE_TENANT_ID \
+  -e AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
+  -e GOOGLE_AUTH=/secrets/creds.json \
+  metrics --ms-root <drive-id> --google-root <folder-id>
+```
 
-## Testing and Coverage
+Ensure your credentials file is mounted or baked into the container image. When
+running in Docker set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` to suppress
+locale warnings.
 
-Execute the full test suite with coverage collection:
+## Testing
+
+Run the full test suite including coverage collection:
 
 ```bash
-dotnet test --collect:"XPlat Code Coverage"
+dotnet test --no-build --no-restore --collect:"XPlat Code Coverage"
 ```
 
 Coverage reports are written to `MetricsPipeline.Core.Tests/TestResults` in
@@ -172,3 +190,4 @@ HTML summary. Aim for coverage above 80% to catch regressions.
 
 The BDD suite now includes a scenario checking shortcut resolution when
 `--follow-shortcuts` is supplied.
+
