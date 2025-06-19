@@ -140,7 +140,7 @@ Run the CLI from the repository root:
 dotnet run --project MetricsCli -- \
   --ms-root <drive-id> --google-root <folder-id> \
   --google-auth creds.json --output mismatches.csv \
-  --max-dop 4
+  --max-dop 4 --follow-shortcuts
 ```
 
 ### Options
@@ -149,6 +149,11 @@ dotnet run --project MetricsCli -- \
 * `--google-auth` – path to OAuth credentials JSON (defaults to `GOOGLE_AUTH`).
 * `--output` – CSV file for mismatch results.
 * `--max-dop` – maximum concurrency for API calls.
+* `--follow-shortcuts` – resolve folder shortcuts in Google Drive.
+
+When this flag is enabled the scanner treats Drive shortcuts to folders as real
+directories. The credentials path can also be provided via the `GOOGLE_AUTH`
+environment variable if `--google-auth` is omitted.
 
 Currently the tool compares a single pair of roots and only counts folders and
 files. It does not yet validate file content or sizes.
@@ -164,3 +169,6 @@ dotnet test --collect:"XPlat Code Coverage"
 Coverage reports are written to `MetricsPipeline.Core.Tests/TestResults` in
 `coverage.cobertura.xml`. Use `reportgenerator` or a similar tool to produce an
 HTML summary. Aim for coverage above 80% to catch regressions.
+
+The BDD suite now includes a scenario checking shortcut resolution when
+`--follow-shortcuts` is supplied.
