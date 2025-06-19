@@ -64,6 +64,7 @@ public class GoogleDriveScannerSteps
     [Then("the shortcut folder name should be returned")]
     public void ThenTheShortcutFolderNameShouldBeReturned()
     {
-        _result.Should().ContainSingle().Which.Should().Be("link");
+        var names = _result!.Select(d => d.Name).ToList();
+        names.Should().ContainSingle().Which.Should().Be("link");
     }
 }

@@ -27,9 +27,9 @@ public sealed class DirectoryComparer : IDirectoryComparer
         var mismatches = new List<MismatchRow>();
 
         var srcDirs = (await _scanner.GetDirectoriesAsync(sourcePath, cancellationToken))
-            .Select(d => Path.GetRelativePath(sourcePath, d));
+            .Select(d => Path.GetRelativePath(sourcePath, d.Name));
         var dstDirs = (await _scanner.GetDirectoriesAsync(destinationPath, cancellationToken))
-            .Select(d => Path.GetRelativePath(destinationPath, d));
+            .Select(d => Path.GetRelativePath(destinationPath, d.Name));
 
         var allDirs = new HashSet<string>(srcDirs, StringComparer.OrdinalIgnoreCase);
         foreach (var d in dstDirs)

@@ -208,3 +208,11 @@ HTML summary. Aim for coverage above 80% to catch regressions.
 The BDD suite now includes a scenario checking shortcut resolution when
 `--follow-shortcuts` is supplied.
 
+Additional notes:
+1. `DirectoryComparer` now works with `DirectoryEntry` results so scanners can provide IDs and names separately.
+2. Unit tests may use a simple `FileSystemDriveScanner` stub to expose local folders as `DirectoryEntry` objects.
+3. `DirectoryScanner` requires its dependencies via the constructor, making it easy to inject mocks during testing.
+4. Run `dotnet build` before testing if feature files change so the generated bindings stay in sync.
+5. Use `reportgenerator` to convert the Cobertura file to HTML and confirm coverage visually.
+6. The scanner's concurrency can be tuned by passing a different `maxConcurrency` when constructing `DirectoryScanner`.
+
