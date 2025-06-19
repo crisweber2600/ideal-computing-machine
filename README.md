@@ -66,6 +66,11 @@ for further processing.
 28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
 29. Configure OAuth credentials for Microsoft and Google before running scanners.
 30. The CLI now supports environment variables for secret management.
+31. `DirectoryScanner` provides local folder enumeration for comparisons.
+32. `DirectoryComparer` checks two paths and reports missing or mismatched files.
+33. `DirectoryComparerWorker` logs these issues when run as a background service.
+34. A new feature file verifies the comparer end to end using temporary folders.
+35. Unit tests confirm the comparer interacts with the scanner through Moq.
 
 ## OAuth Configuration
 
