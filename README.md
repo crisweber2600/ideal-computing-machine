@@ -7,12 +7,16 @@ scanning and directory comparison helpers.
 A new `GraphScanner` leverages the Microsoft Graph SDK to enumerate OneDrive or
 SharePoint document libraries. It automatically handles throttling and parallel
 requests.
+The library now also offers a `GoogleDriveScanner` for listing folders in
+Google Drive. It shares the same concurrency limits and retry behaviour as the
+Graph implementation and can optionally resolve shortcuts.
 
 ## Prerequisites
 - .NET 9 SDK (install via `dotnet-install.sh` or from the official [download page](https://aka.ms/dotnet-download))
 - A Unix-like shell capable of running bash scripts
 - Git for version control
 - `Microsoft.Graph` NuGet package for Graph scanning features
+- `Google.Apis.Drive.v3` package for Google Drive integration
 
 ## Usage
 1. Restore dependencies with `dotnet restore`.
@@ -27,6 +31,8 @@ requests.
    execute feature files and unit tests.
 9. Unit tests reside in the `MetricsPipeline.Core.Tests` project and verify
    `GraphScanner` behaviour.
+10. `GoogleDriveScanner` can be used to enumerate folders from Google Drive. Use
+    the `--follow-shortcuts` option to resolve shortcut targets automatically.
 
 ### Graph Scanning Example
 ```csharp
@@ -38,6 +44,15 @@ var folders = await scanner.GetDirectoriesAsync("{driveId}:{rootItemId}");
 
 The scanner restricts concurrency with `SemaphoreSlim` and retries 429 responses
 using Polly's `WaitAndRetryAsync` policy.
+
+### Google Drive Scanning Example
+```csharp
+var service = new DriveService(new BaseClientService.Initializer());
+var scanner = new GoogleDriveScanner(service, logger, followShortcuts: true);
+var folders = await scanner.GetDirectoriesAsync("{folderId}");
+```
+The Google implementation also uses a semaphore to limit concurrent requests and
+applies exponential back-off when the Drive API returns 429 or 503 errors.
 
 This solution serves as a starting point for building background services.
 Refer to the [.NET 9 release notes](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-9) for new features.
