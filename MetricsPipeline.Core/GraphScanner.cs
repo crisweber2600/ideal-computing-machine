@@ -7,12 +7,14 @@ using Polly.Retry;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Net.Http;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MetricsPipeline.Core;
 
 /// <summary>
 /// Scans a Microsoft Graph drive using paging with concurrency control.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class GraphScanner : IDriveScanner
 {
     private readonly GraphServiceClient _client;

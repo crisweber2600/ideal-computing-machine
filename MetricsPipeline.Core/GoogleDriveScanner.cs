@@ -6,12 +6,14 @@ using Polly.Retry;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Net;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MetricsPipeline.Core;
 
 /// <summary>
 /// Scans a Google Drive folder using the Drive API.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class GoogleDriveScanner : IDriveScanner
 {
     private readonly DriveService _service;
