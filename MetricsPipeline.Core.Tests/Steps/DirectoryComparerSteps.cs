@@ -42,7 +42,11 @@ public class DirectoryComparerSteps : IDisposable
     [When("I compare the source and destination directories")]
     public async Task WhenICompare()
     {
-        var comparer = new DirectoryComparer(new FileSystemScanner());
+        var logger = new NullLogger<DirectoryScanner>();
+        var stub = new LocalScanner();
+        var scanner = new DirectoryScanner(stub, logger);
+        var comparer = new DirectoryComparer(stub);
+
         _rows = (await comparer.CompareAsync(_source, _destination)).ToList();
     }
 
@@ -73,5 +77,6 @@ internal class FileSystemScanner : IDriveScanner
         int dirs = Directory.GetDirectories(path).Length;
         long bytes = Directory.EnumerateFiles(path).Sum(f => new FileInfo(f).Length);
         return Task.FromResult(new DirectoryCounts(files, dirs, bytes));
+
     }
 }
