@@ -11,6 +11,12 @@ The library now also offers a `GoogleDriveScanner` for listing folders in
 Google Drive. It shares the same concurrency limits and retry behaviour as the
 Graph implementation and can optionally resolve shortcuts.
 
+A new `MultiDriveCoordinatorWorker` coordinates scanning of Google and
+Microsoft roots in parallel. It uses a work queue seeded with pairs of root
+paths and fans out workers based on the CPU count to maximise throughput.
+Aggregated file counts for both platforms are stored in memory for later
+processing or comparison.
+
 ## Prerequisites
 - .NET 9 SDK (install via `dotnet-install.sh` or from the official [download page](https://aka.ms/dotnet-download))
 - A Unix-like shell capable of running bash scripts
@@ -33,6 +39,13 @@ Graph implementation and can optionally resolve shortcuts.
    `GraphScanner` behaviour.
 10. `GoogleDriveScanner` can be used to enumerate folders from Google Drive. Use
     the `--follow-shortcuts` option to resolve shortcut targets automatically.
+11. Use `MultiDriveCoordinatorWorker` to process Google and Microsoft roots
+    concurrently. Seed it with tuples of root IDs and it will fan out scanning
+    tasks according to your CPU count.
+12. A new feature file validates the coordinator behaviour with BDD tests,
+    ensuring counts are aggregated correctly.
+13. When running inside a minimal container you may set
+    `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` to suppress locale warnings.
 
 ### Graph Scanning Example
 ```csharp
@@ -70,4 +83,13 @@ Feel free to extend it with your own business logic and tests.
 var scanner = serviceProvider.GetRequiredService<IDriveScanner>();
 var counts = await scanner.GetCountsAsync("/data");
 Console.WriteLine($"Files: {counts.FileCount}, Dirs: {counts.DirectoryCount}");
+```
+
+### Coordinated Drive Example
+```csharp
+var pairs = new[]{("gRoot","mRoot")};
+var googleMap = new ConcurrentDictionary<string, DirectoryCounts>();
+var msMap = new ConcurrentDictionary<string, DirectoryCounts>();
+var worker = new MultiDriveCoordinatorWorker(gScanner, mScanner, pairs, googleMap, msMap, logger);
+await worker.StartAsync();
 ```
