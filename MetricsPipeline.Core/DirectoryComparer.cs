@@ -31,6 +31,7 @@ public sealed class DirectoryComparer : IDirectoryComparer
         var dstDirs = (await _scanner.GetDirectoriesAsync(destinationPath, cancellationToken))
             .Select(d => d.Name);
 
+
         var allDirs = new HashSet<string>(srcDirs, StringComparer.OrdinalIgnoreCase);
         foreach (var d in dstDirs)
         {

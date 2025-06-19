@@ -47,6 +47,7 @@ public class DirectoryComparerSteps : IDisposable
         var stub = new LocalScanner();
         var scanner = new DirectoryScanner(stub, logger);
         var comparer = new DirectoryComparer(stub);
+
         _rows = (await comparer.CompareAsync(_source, _destination)).ToList();
     }
 
