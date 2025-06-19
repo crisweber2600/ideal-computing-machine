@@ -21,6 +21,30 @@ public class CommandLineSteps
         Environment.SetEnvironmentVariable("GOOGLE_AUTH", path);
     }
 
+    [Given("MS_ROOT is set to \"(.*)\"")]
+    public void GivenMsRoot(string value)
+    {
+        Environment.SetEnvironmentVariable("MS_ROOT", value);
+    }
+
+    [Given("GOOGLE_ROOT is set to \"(.*)\"")]
+    public void GivenGoogleRoot(string value)
+    {
+        Environment.SetEnvironmentVariable("GOOGLE_ROOT", value);
+    }
+
+    [Given("OUTPUT_CSV is set to \"(.*)\"")]
+    public void GivenOutputCsv(string value)
+    {
+        Environment.SetEnvironmentVariable("OUTPUT_CSV", value);
+    }
+
+    [Given("MAX_DOP is set to \"(.*)\"")]
+    public void GivenMaxDop(string value)
+    {
+        Environment.SetEnvironmentVariable("MAX_DOP", value);
+    }
+
     [When("I parse the arguments \"(.*)\"")]
     public void WhenIParse(string args)
     {
@@ -31,6 +55,30 @@ public class CommandLineSteps
     public void ThenOptionsShouldContain(string expected)
     {
         _options!.GoogleAuth.Should().Be(expected);
+    }
+
+    [Then("the options MsRoot should be \"(.*)\"")]
+    public void ThenMsRoot(string expected)
+    {
+        _options!.MsRoot.Should().Be(expected);
+    }
+
+    [Then("the options GoogleRoot should be \"(.*)\"")]
+    public void ThenGoogleRoot(string expected)
+    {
+        _options!.GoogleRoot.Should().Be(expected);
+    }
+
+    [Then("the output path should be \"(.*)\"")]
+    public void ThenOutputPath(string expected)
+    {
+        _options!.Output.Should().Be(expected);
+    }
+
+    [Then("the max dop should be (\\d+)")]
+    public void ThenMaxDop(int expected)
+    {
+        _options!.MaxDop.Should().Be(expected);
     }
 
     [When("I run the CLI pipeline")]

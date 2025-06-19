@@ -92,6 +92,14 @@ for further processing.
     `dotnet tool install --global dotnet-reportgenerator-globaltool`.
 42. Publish the CLI for reuse with `dotnet publish -c Release MetricsCli`.
 43. Set `MAX_DOP` to control API concurrency without editing the source code.
+44. CLI options now fall back to `MS_ROOT`, `GOOGLE_ROOT`, `OUTPUT_CSV` and
+    `MAX_DOP` when corresponding switches are omitted.
+45. `--max-dop` and `MAX_DOP` also control `DirectoryScanner` concurrency so
+    scanning performance matches your environment.
+46. `PipelineRunner.RunAsync` accepts a `CancellationToken` for graceful
+    termination on Ctrl+C.
+47. New BDD scenarios verify environment variable parsing for these options.
+48. Minor cleanup removed duplicate using directives in `DirectoryScanner`.
 
 
 ## OAuth Configuration

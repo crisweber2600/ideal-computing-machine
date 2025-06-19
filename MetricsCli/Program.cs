@@ -6,6 +6,7 @@ using Google.Apis.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using MetricsPipeline.Core;
+using System.Threading;
 
 namespace MetricsCli;
 
@@ -18,18 +19,20 @@ public static class Program
     }
 
     private static (RootCommand Command,
-        Option<string> Ms,
-        Option<string> Google,
+        Option<string?> Ms,
+        Option<string?> Google,
         Option<string?> Auth,
         Option<string> Output,
         Option<int> Dop,
         Option<bool> Follow) CreateDefinition()
     {
-        var msRoot = new Option<string>("--ms-root") { IsRequired = true, Description = "Microsoft root path" };
-        var googleRoot = new Option<string>("--google-root") { IsRequired = true, Description = "Google Drive root" };
+        var msRoot = new Option<string?>("--ms-root", getDefaultValue: () => Environment.GetEnvironmentVariable("MS_ROOT")) { Description = "Microsoft root path" };
+        var googleRoot = new Option<string?>("--google-root", getDefaultValue: () => Environment.GetEnvironmentVariable("GOOGLE_ROOT")) { Description = "Google Drive root" };
         var googleAuth = new Option<string?>("--google-auth", description: "Path to Google credentials JSON") { IsRequired = false };
-        var output = new Option<string>("--output", () => "mismatches.csv", "CSV output file");
-        var maxDop = new Option<int>("--max-dop", () => Environment.ProcessorCount, "Max degree of parallelism");
+        var output = new Option<string>("--output", getDefaultValue: () => Environment.GetEnvironmentVariable("OUTPUT_CSV") ?? "mismatches.csv", "CSV output file");
+        var maxDop = new Option<int>("--max-dop", getDefaultValue: () =>
+            int.TryParse(Environment.GetEnvironmentVariable("MAX_DOP"), out var v) ? v : Environment.ProcessorCount,
+            description: "Max degree of parallelism");
         var follow = new Option<bool>("--follow-shortcuts", () => false, "Resolve Google Drive shortcuts");
         var cmd = new RootCommand("Drive mismatch scanning tool");
         cmd.AddOption(msRoot);
@@ -44,14 +47,20 @@ public static class Program
     internal static RootCommand BuildCommand()
     {
         var def = CreateDefinition();
-        def.Command.SetHandler(async (string mRoot, string gRoot, string? auth, string outFile, int dop, bool follow) =>
+        def.Command.SetHandler(async (string? mRoot, string? gRoot, string? auth, string outFile, int dop, bool follow, CancellationToken ct) =>
         {
-            var options = new Options(mRoot, gRoot, outFile, auth ?? Environment.GetEnvironmentVariable("GOOGLE_AUTH"), dop, follow);
+            var options = new Options(
+                mRoot ?? Environment.GetEnvironmentVariable("MS_ROOT") ?? throw new InvalidOperationException("MS root missing"),
+                gRoot ?? Environment.GetEnvironmentVariable("GOOGLE_ROOT") ?? throw new InvalidOperationException("Google root missing"),
+                outFile,
+                auth ?? Environment.GetEnvironmentVariable("GOOGLE_AUTH"),
+                dop,
+                follow);
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
             var googleScanner = CreateGoogleScanner(options, loggerFactory.CreateLogger<GoogleDriveScanner>());
             var msScanner = CreateMicrosoftScanner(options, loggerFactory.CreateLogger<GraphScanner>());
             await using var stream = File.Create(options.Output);
-            await PipelineRunner.RunAsync(options, googleScanner, msScanner, stream, loggerFactory);
+            await PipelineRunner.RunAsync(options, googleScanner, msScanner, stream, loggerFactory, ct);
         }, def.Ms, def.Google, def.Auth, def.Output, def.Dop, def.Follow);
         return def.Command;
     }
@@ -60,13 +69,13 @@ public static class Program
     {
         var def = CreateDefinition();
         var result = def.Command.Parse(args);
-        var msRoot = result.GetValueForOption(def.Ms)!;
-        var googleRoot = result.GetValueForOption(def.Google)!;
+        var msRoot = result.GetValueForOption(def.Ms) ?? Environment.GetEnvironmentVariable("MS_ROOT") ?? throw new InvalidOperationException("MS root missing");
+        var googleRoot = result.GetValueForOption(def.Google) ?? Environment.GetEnvironmentVariable("GOOGLE_ROOT") ?? throw new InvalidOperationException("Google root missing");
         var auth = result.GetValueForOption(def.Auth) ?? Environment.GetEnvironmentVariable("GOOGLE_AUTH");
-        var output = result.GetValueForOption(def.Output)!;
+        var output = result.GetValueForOption(def.Output);
         var dop = result.GetValueForOption(def.Dop);
         var follow = result.GetValueForOption(def.Follow);
-        return new Options(msRoot, googleRoot, output, auth, dop, follow);
+        return new Options(msRoot, googleRoot, output!, auth, dop, follow);
     }
 
     private static GoogleDriveScanner CreateGoogleScanner(Options options, ILogger<GoogleDriveScanner> logger)
