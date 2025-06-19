@@ -1,5 +1,5 @@
 # Ideal Computing Machine
-
+![CI](https://github.com/OWNER/ideal-computing-machine/actions/workflows/ci.yml/badge.svg)
 ## Overview
 
 Ideal Computing Machine demonstrates a minimal background worker and command line
