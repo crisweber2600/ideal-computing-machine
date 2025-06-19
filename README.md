@@ -58,6 +58,11 @@ for further processing.
 21. Pass Google credentials with `--google-auth` or set the `GOOGLE_AUTH` environment variable.
 22. Use `--output` to write mismatches to a CSV file.
 23. Limit concurrency with the `--max-dop` option.
+24. Step definitions now resolve services via Microsoft.Extensions.DependencyInjection.
+25. `ScenarioDependencies` registers mocks for pipeline BDD tests.
+26. A new feature checks that only mismatched entries reach the CSV export.
+27. Moq supplies scanner stubs so tests remain fast and isolated.
+28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
 
 ### Graph Scanning Example
 ```csharp
