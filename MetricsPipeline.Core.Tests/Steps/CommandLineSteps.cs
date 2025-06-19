@@ -40,7 +40,7 @@ public class CommandLineSteps
         var ms = new CliStubScanner(new Dictionary<string, DirectoryCounts> { ["m"] = new DirectoryCounts(0,1,0) });
         using var stream = new MemoryStream();
         var loggerFactory = LoggerFactory.Create(b => { });
-        var options = new Options("m","g","out.csv","cred.json",1);
+        var options = new Options("m","g","out.csv","cred.json",1,false);
         await PipelineRunner.RunAsync(options, google, ms, stream, loggerFactory);
         stream.Position = 0;
         using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen:true);

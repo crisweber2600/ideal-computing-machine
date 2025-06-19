@@ -4,18 +4,18 @@ using Microsoft.Extensions.Logging;
 namespace MetricsPipeline.Core.Infrastructure.Workers;
 
 /// <summary>
-/// Worker that compares two directories using <see cref="IDirectoryComparer"/>.
+/// Worker that compares two directories using <see cref="DirectoryComparer"/>.
 /// </summary>
 public sealed class DirectoryComparerWorker : BackgroundService
 {
-    private readonly IDirectoryComparer _comparer;
+    private readonly IDriveScanner _scanner;
     private readonly ILogger<DirectoryComparerWorker> _logger;
     private readonly string _source;
     private readonly string _destination;
 
-    public DirectoryComparerWorker(IDirectoryComparer comparer, ILogger<DirectoryComparerWorker> logger, string source, string destination)
+    public DirectoryComparerWorker(IDriveScanner scanner, ILogger<DirectoryComparerWorker> logger, string source, string destination)
     {
-        _comparer = comparer;
+        _scanner = scanner;
         _logger = logger;
         _source = source;
         _destination = destination;
@@ -23,7 +23,8 @@ public sealed class DirectoryComparerWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var mismatches = await _comparer.CompareAsync(_source, _destination, stoppingToken);
+        var comparer = new DirectoryComparer(_scanner);
+        var mismatches = await comparer.CompareAsync(_source, _destination, stoppingToken);
         foreach (var mismatch in mismatches)
         {
             if (_logger.IsEnabled(LogLevel.Warning))

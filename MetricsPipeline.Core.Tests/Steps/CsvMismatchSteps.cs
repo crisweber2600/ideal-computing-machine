@@ -60,7 +60,7 @@ public class CsvMismatchSteps
     [When("the comparison pipeline runs")]
     public async Task WhenTheComparisonPipelineRuns()
     {
-        var options = new Options("m", "g", "out.csv", "cred.json", 1);
+        var options = new Options("m", "g", "out.csv", "cred.json", 1, false);
         await PipelineRunner.RunAsync(options, _google, _microsoft, _stream, _loggerFactory);
         _stream.Position = 0;
         using var reader = new StreamReader(_stream);
