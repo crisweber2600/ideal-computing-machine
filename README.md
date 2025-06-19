@@ -15,10 +15,11 @@ A new `MultiDriveCoordinatorWorker` coordinates scanning of Google and
 Microsoft roots in parallel. It uses a work queue seeded with pairs of root
 paths and fans out workers based on the CPU count to maximise throughput.
 Aggregated file counts for both platforms are stored in memory for later
-processing or comparison.
+processing or comparison. The new `DirectoryCountsComparer` can merge these maps and expose only mismatched paths
+for further processing.
 
 ## Prerequisites
-- .NET 9 SDK (install via `dotnet-install.sh` or from the official [download page](https://aka.ms/dotnet-download))
+- .NET 9 SDK (install via `dotnet-install.sh` or from the official [download page](https://aka.ms/dotnet-download)) (preview)
 - A Unix-like shell capable of running bash scripts
 - Git for version control
 - `Microsoft.Graph` NuGet package for Graph scanning features
@@ -46,6 +47,12 @@ processing or comparison.
     ensuring counts are aggregated correctly.
 13. When running inside a minimal container you may set
     `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` to suppress locale warnings.
+
+14. Use `DirectoryCountsComparer` to join Google and Microsoft maps and spot count mismatches.
+15. `CsvExporter` streams these results directly to disk or stdout using `StreamWriter`.
+16. A new feature file exercises the comparer so coverage remains high.
+17. Example scripts now show how to pipe mismatches to a CSV file.
+18. The README clarifies installing the .NET 9 preview SDK for this project.
 
 ### Graph Scanning Example
 ```csharp
