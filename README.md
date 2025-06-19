@@ -62,7 +62,28 @@ for further processing.
 25. `ScenarioDependencies` registers mocks for pipeline BDD tests.
 26. A new feature checks that only mismatched entries reach the CSV export.
 27. Moq supplies scanner stubs so tests remain fast and isolated.
+
 28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
+29. Configure OAuth credentials for Microsoft and Google before running scanners.
+30. The CLI now supports environment variables for secret management.
+
+## OAuth Configuration
+
+### Microsoft Graph
+1. Register an application in Azure Active Directory and grant `Files.Read.All` and
+   `Sites.Read.All` API permissions.
+2. Create a client secret and set `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and
+   `AZURE_CLIENT_SECRET` environment variables.
+3. The sample uses `DefaultAzureCredential` so tokens are acquired automatically
+   when these variables are present or you are logged in with `Azure CLI`.
+
+### Google Drive
+1. Create a Google Cloud project and enable the Drive API.
+2. Generate a service account key or OAuth client credentials and download the
+   JSON file.
+3. Provide the file path via `--google-auth` or set the `GOOGLE_AUTH`
+   environment variable so the scanners can authenticate.
+
 
 ### Graph Scanning Example
 ```csharp
@@ -110,3 +131,36 @@ var msMap = new ConcurrentDictionary<string, DirectoryCounts>();
 var worker = new MultiDriveCoordinatorWorker(gScanner, mScanner, pairs, googleMap, msMap, logger);
 await worker.StartAsync();
 ```
+
+## Command Line Interface
+
+Run the CLI from the repository root:
+
+```bash
+dotnet run --project MetricsCli -- \
+  --ms-root <drive-id> --google-root <folder-id> \
+  --google-auth creds.json --output mismatches.csv \
+  --max-dop 4
+```
+
+### Options
+* `--ms-root` – Microsoft Graph path or ID to scan.
+* `--google-root` – Google Drive folder to compare.
+* `--google-auth` – path to OAuth credentials JSON (defaults to `GOOGLE_AUTH`).
+* `--output` – CSV file for mismatch results.
+* `--max-dop` – maximum concurrency for API calls.
+
+Currently the tool compares a single pair of roots and only counts folders and
+files. It does not yet validate file content or sizes.
+
+## Testing and Coverage
+
+Execute the full test suite with coverage collection:
+
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+Coverage reports are written to `MetricsPipeline.Core.Tests/TestResults` in
+`coverage.cobertura.xml`. Use `reportgenerator` or a similar tool to produce an
+HTML summary. Aim for coverage above 80% to catch regressions.
