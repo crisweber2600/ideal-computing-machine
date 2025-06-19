@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
+using Microsoft.Extensions.Logging.Abstractions;
 using FluentAssertions;
 using Reqnroll;
 using MetricsPipeline.Core;
@@ -41,7 +43,11 @@ public class DirectoryComparerSteps : IDisposable
     [When("I compare the source and destination directories")]
     public async Task WhenICompare()
     {
-        var comparer = new DirectoryComparer(new NullScanner());
+        var logger = new NullLogger<DirectoryScanner>();
+        var stub = new LocalScanner();
+        var scanner = new DirectoryScanner(stub, logger);
+        var comparer = new DirectoryComparer(stub);
+
         _rows = (await comparer.CompareAsync(_source, _destination)).ToList();
     }
 
@@ -53,18 +59,27 @@ public class DirectoryComparerSteps : IDisposable
         _rows.Should().ContainSingle(r => r is SizeMismatchRow);
     }
 
-    public void Dispose()
+public void Dispose()
     {
         if (Directory.Exists(_root))
             Directory.Delete(_root, true);
     }
 }
 
-internal sealed class NullScanner : IDriveScanner
+internal sealed class LocalScanner : IDriveScanner
 {
     public Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<DirectoryEntry>>(Array.Empty<DirectoryEntry>());
+    {
+        var entries = Directory.EnumerateDirectories(rootPath)
+            .Select(d => new DirectoryEntry(d, Path.GetFileName(d)));
+        return Task.FromResult<IEnumerable<DirectoryEntry>>(entries.ToArray());
+    }
 
     public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
-        => Task.FromResult(new DirectoryCounts(0, 0, 0));
+    {
+        var files = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+        var dirs = Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories);
+        long bytes = files.Sum(f => new FileInfo(f).Length);
+        return Task.FromResult(new DirectoryCounts(files.Count(), dirs.Count(), bytes));
+    }
 }
