@@ -13,7 +13,7 @@ namespace MetricsPipeline.Core.Tests.Steps;
 [Binding]
 public class GoogleDriveScannerSteps
 {
-    private IEnumerable<string>? _result;
+    private IEnumerable<DirectoryEntry>? _result;
 
     [Given("a drive folder contains two child folders")]
     public void GivenADriveFolderContainsTwoChildFolders()
@@ -36,6 +36,6 @@ public class GoogleDriveScannerSteps
     [Then("both Google folder names should be returned")]
     public void ThenBothGoogleFolderNamesShouldBeReturned()
     {
-        _result.Should().Contain(new[] { "one", "two" });
+        _result!.Select(d => d.Name).Should().Contain(new[] { "one", "two" });
     }
 }

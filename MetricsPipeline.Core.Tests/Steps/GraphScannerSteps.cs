@@ -15,7 +15,7 @@ namespace MetricsPipeline.Core.Tests.Steps;
 [Binding]
 public class GraphScannerSteps
 {
-    private IEnumerable<string>? _result;
+    private IEnumerable<DirectoryEntry>? _result;
 
     [Given("a drive contains two child folders")]
     public void GivenADriveContainsTwoChildFolders()
@@ -38,6 +38,6 @@ public class GraphScannerSteps
     [Then("both folder names should be returned")]
     public void ThenBothFolderNamesShouldBeReturned()
     {
-        _result.Should().Contain(new[] { "one", "two" });
+        _result!.Select(d => d.Name).Should().Contain(new[] { "one", "two" });
     }
 }

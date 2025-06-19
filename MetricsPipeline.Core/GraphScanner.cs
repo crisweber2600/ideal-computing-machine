@@ -44,18 +44,18 @@ public class GraphScanner : IDriveScanner
             });
     }
 
-    public async Task<IEnumerable<string>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
     {
         var ids = rootPath.Split(':');
         var driveId = ids[0];
         var itemId = ids.Length > 1 ? ids[1] : "root";
 
-        var results = new ConcurrentBag<string>();
+        var results = new ConcurrentBag<DirectoryEntry>();
         await foreach (var item in GetChildrenAsync(driveId, itemId, cancellationToken))
         {
             if (item.Folder != null)
             {
-                results.Add(item.Name ?? string.Empty);
+                results.Add(new DirectoryEntry($"{driveId}:{item.Id}", item.Name ?? string.Empty));
             }
         }
         return results.ToArray();

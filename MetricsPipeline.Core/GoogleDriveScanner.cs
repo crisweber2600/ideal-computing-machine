@@ -39,14 +39,14 @@ public class GoogleDriveScanner : IDriveScanner
                 });
     }
 
-    public async Task<IEnumerable<string>> GetDirectoriesAsync(string rootId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootId, CancellationToken cancellationToken = default)
     {
-        var results = new ConcurrentBag<string>();
+        var results = new ConcurrentBag<DirectoryEntry>();
         await foreach (var file in GetChildrenAsync(rootId, cancellationToken))
         {
             if (IsDirectory(file))
             {
-                results.Add(file.Name ?? string.Empty);
+                results.Add(new DirectoryEntry(file.Id!, file.Name ?? string.Empty));
             }
         }
         return results.ToArray();

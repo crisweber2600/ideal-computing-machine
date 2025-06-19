@@ -63,8 +63,8 @@ internal sealed class CliStubScanner : IDriveScanner
         _map = new Dictionary<string, DirectoryCounts>(map);
     }
 
-    public Task<IEnumerable<string>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<string>>(Array.Empty<string>());
+    public Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<DirectoryEntry>>(Array.Empty<DirectoryEntry>());
 
     public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
         => Task.FromResult(_map[path]);
