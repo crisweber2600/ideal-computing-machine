@@ -100,6 +100,11 @@ for further processing.
     termination on Ctrl+C.
 47. New BDD scenarios verify environment variable parsing for these options.
 48. Minor cleanup removed duplicate using directives in `DirectoryScanner`.
+49. `PipelineRunner` now lives in the core library so other projects can invoke it.
+50. A `PipelineWorker` executes the entire comparison when configured.
+51. Populate the `Pipeline` section in `appsettings.json` with `MsRoot`, `GoogleRoot`, `GoogleAuth`, `Output` and `MaxDop`.
+52. The worker uses these settings to spin up scanners and export a CSV automatically.
+53. Run `dotnet run --project DirectorySyncWorker` after updating the settings to process both drives end to end.
 
 
 ## OAuth Configuration
