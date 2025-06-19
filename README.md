@@ -217,16 +217,12 @@ HTML summary. Aim for coverage above 80% to catch regressions.
 The BDD suite now includes a scenario checking shortcut resolution when
 `--follow-shortcuts` is supplied.
 
-### Directory Comparer Notes
+Additional notes:
+1. `DirectoryComparer` now works with `DirectoryEntry` results so scanners can provide IDs and names separately.
+2. Unit tests may use a simple `FileSystemDriveScanner` stub to expose local folders as `DirectoryEntry` objects.
+3. `DirectoryScanner` requires its dependencies via the constructor, making it easy to inject mocks during testing.
+4. Run `dotnet build` before testing if feature files change so the generated bindings stay in sync.
+5. Use `reportgenerator` to convert the Cobertura file to HTML and confirm coverage visually.
+6. The scanner's concurrency can be tuned by passing a different `maxConcurrency` when constructing `DirectoryScanner`.
 
-- `DirectoryComparer` now expects an `IDriveScanner` that returns `DirectoryEntry`
-  objects. Use the `Name` property when constructing relative paths.
-- Each `DirectoryEntry` also exposes an `Id` so scanners can fetch nested
-  folders without relying on path strings.
-- When unit testing the comparer you can inject a simple stub scanner that
-  returns `Array.Empty<DirectoryEntry>()` to focus on file-level checks.
-- The comparer works with any scanner implementation, including the
-  `GoogleDriveScanner` and `GraphScanner` provided in this repository.
-- Inject `NullLogger<T>` from the test project to silence log output during
-  automated runs.
 
