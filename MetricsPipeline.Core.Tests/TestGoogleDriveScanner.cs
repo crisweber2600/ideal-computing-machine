@@ -15,8 +15,8 @@ public class TestGoogleDriveScanner : GoogleDriveScanner
 {
     private readonly IEnumerable<File> _items;
 
-    public TestGoogleDriveScanner(IEnumerable<File> items)
-        : base(new DriveService(new BaseClientService.Initializer()), new NullLogger<GoogleDriveScanner>())
+    public TestGoogleDriveScanner(IEnumerable<File> items, bool follow = false)
+        : base(new DriveService(new BaseClientService.Initializer()), new NullLogger<GoogleDriveScanner>(), follow)
     {
         _items = items;
     }

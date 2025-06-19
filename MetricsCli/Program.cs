@@ -30,7 +30,7 @@ public static class Program
         var googleAuth = new Option<string?>("--google-auth", description: "Path to Google credentials JSON") { IsRequired = false };
         var output = new Option<string>("--output", () => "mismatches.csv", "CSV output file");
         var maxDop = new Option<int>("--max-dop", () => Environment.ProcessorCount, "Max degree of parallelism");
-        var follow = new Option<bool>("--follow-shortcuts", description: "Resolve Google Drive shortcuts");
+        var follow = new Option<bool>("--follow-shortcuts", () => false, "Resolve Google Drive shortcuts");
         var cmd = new RootCommand("Drive mismatch scanning tool");
         cmd.AddOption(msRoot);
         cmd.AddOption(googleRoot);
