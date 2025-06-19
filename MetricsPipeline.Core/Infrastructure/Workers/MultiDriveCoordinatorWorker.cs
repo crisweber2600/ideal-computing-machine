@@ -44,11 +44,19 @@ public class MultiDriveCoordinatorWorker : BackgroundService
             {
                 while (queue.TryDequeue(out var pair) && !stoppingToken.IsCancellationRequested)
                 {
-                    var gCounts = await _googleScanner.GetCountsAsync(pair.GoogleRoot, stoppingToken);
-                    _googleCounts[pair.GoogleRoot] = gCounts;
+                    var gScanner = new DirectoryScanner(_googleScanner, Microsoft.Extensions.Logging.Abstractions.NullLogger<DirectoryScanner>.Instance);
+                    var gMap = await gScanner.ScanAsync(pair.GoogleRoot, pair.GoogleRoot, stoppingToken);
+                    foreach (var kvp in gMap)
+                    {
+                        _googleCounts[kvp.Key] = kvp.Value;
+                    }
 
-                    var mCounts = await _microsoftScanner.GetCountsAsync(pair.MicrosoftRoot, stoppingToken);
-                    _microsoftCounts[pair.MicrosoftRoot] = mCounts;
+                    var mScanner = new DirectoryScanner(_microsoftScanner, Microsoft.Extensions.Logging.Abstractions.NullLogger<DirectoryScanner>.Instance);
+                    var mMap = await mScanner.ScanAsync(pair.MicrosoftRoot, pair.MicrosoftRoot, stoppingToken);
+                    foreach (var kvp in mMap)
+                    {
+                        _microsoftCounts[kvp.Key] = kvp.Value;
+                    }
                 }
             }, stoppingToken));
         }

@@ -41,6 +41,9 @@ public class CsvMismatchSteps
         _context.GoogleMock
             .Setup(s => s.GetCountsAsync("g", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DirectoryCounts(count, 0, 0));
+        _context.GoogleMock
+            .Setup(s => s.GetDirectoriesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DirectoryEntry>());
     }
 
     [Given(@"a microsoft root returns a count of (\d+)")]
@@ -49,6 +52,9 @@ public class CsvMismatchSteps
         _context.MicrosoftMock
             .Setup(s => s.GetCountsAsync("m", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DirectoryCounts(count, 0, 0));
+        _context.MicrosoftMock
+            .Setup(s => s.GetDirectoriesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DirectoryEntry>());
     }
 
     [When("the comparison pipeline runs")]

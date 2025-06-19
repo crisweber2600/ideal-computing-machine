@@ -7,23 +7,60 @@ using System.Threading.Tasks;
 namespace MetricsPipeline.Core;
 
 /// <summary>
-/// Scans the local file system for directory information.
+/// Recursively scans directories using an <see cref="IDriveScanner"/>.
+/// Each worker pulls items from a queue so scanning can proceed concurrently.
 /// </summary>
-public class DirectoryScanner : IDriveScanner
+public class DirectoryScanner
 {
-    /// <inheritdoc />
-    public Task<IEnumerable<string>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
+    private readonly IDriveScanner _scanner;
+    private readonly ILogger<DirectoryScanner> _logger;
+    private readonly int _maxConcurrency;
+
+    public DirectoryScanner(IDriveScanner scanner, ILogger<DirectoryScanner> logger, int maxConcurrency = 4)
     {
-        var dirs = Directory.EnumerateDirectories(rootPath, "*", SearchOption.AllDirectories);
-        return Task.FromResult<IEnumerable<string>>(dirs.ToArray());
+        _scanner = scanner;
+        _logger = logger;
+        _maxConcurrency = maxConcurrency;
     }
 
-    /// <inheritdoc />
-    public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Walks the directory tree starting from <paramref name="rootId"/>.
+    /// </summary>
+    /// <param name="rootId">Root directory identifier.</param>
+    /// <param name="rootPath">Path label used for dictionary keys.</param>
+    /// <param name="cancellationToken">Token to observe cancellation.</param>
+    public async Task<IDictionary<string, DirectoryCounts>> ScanAsync(string rootId, string rootPath, CancellationToken cancellationToken = default)
     {
-        var files = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
-        var dirs = Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories);
-        long bytes = files.Sum(f => new FileInfo(f).Length);
-        return Task.FromResult(new DirectoryCounts(files.Count(), dirs.Count(), bytes));
+        var map = new ConcurrentDictionary<string, DirectoryCounts>();
+        var queue = new ConcurrentQueue<(string Id, string Path)>();
+        queue.Enqueue((rootId, rootPath));
+
+        var workers = new List<Task>();
+        for (int i = 0; i < _maxConcurrency; i++)
+        {
+            workers.Add(Task.Run(async () =>
+            {
+                while (queue.TryDequeue(out var item) && !cancellationToken.IsCancellationRequested)
+                {
+                    var counts = await _scanner.GetCountsAsync(item.Id, cancellationToken);
+                    map[item.Path] = counts;
+
+                    var children = await _scanner.GetDirectoriesAsync(item.Id, cancellationToken);
+                    foreach (var child in children)
+                    {
+                        var childPath = string.IsNullOrEmpty(item.Path) ? child.Name : $"{item.Path}/{child.Name}";
+                        queue.Enqueue((child.Id, childPath));
+                    }
+                }
+            }, cancellationToken));
+        }
+
+        await Task.WhenAll(workers);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Scanned {count} directories", map.Count);
+        }
+        return map;
     }
 }
+

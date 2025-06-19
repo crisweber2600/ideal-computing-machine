@@ -24,10 +24,10 @@ public sealed class DriveScannerWorker : BackgroundService
         var directories = await _scanner.GetDirectoriesAsync(_rootPath, stoppingToken);
         foreach (var dir in directories)
         {
-            var counts = await _scanner.GetCountsAsync(dir, stoppingToken);
+            var counts = await _scanner.GetCountsAsync(dir.Id, stoppingToken);
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation("{dir} -> {files} files, {dirs} dirs", dir, counts.FileCount, counts.DirectoryCount);
+                _logger.LogInformation("{dir} -> {files} files, {dirs} dirs", dir.Name, counts.FileCount, counts.DirectoryCount);
             }
         }
     }

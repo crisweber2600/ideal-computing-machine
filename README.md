@@ -11,6 +11,10 @@ The library now also offers a `GoogleDriveScanner` for listing folders in
 Google Drive. It shares the same concurrency limits and retry behaviour as the
 Graph implementation and can optionally resolve shortcuts.
 
+`DirectoryScanner` is a new helper that walks child folders using a work queue
+and limits concurrency with a semaphore. It produces a map of counts for every
+directory discovered.
+
 A new `MultiDriveCoordinatorWorker` coordinates scanning of Google and
 Microsoft roots in parallel. It uses a work queue seeded with pairs of root
 paths and fans out workers based on the CPU count to maximise throughput.
@@ -45,32 +49,29 @@ for further processing.
     tasks according to your CPU count.
 12. A new feature file validates the coordinator behaviour with BDD tests,
     ensuring counts are aggregated correctly.
-13. When running inside a minimal container you may set
+13. DirectoryScanner is also exercised via a scenario that confirms nested
+    folders are counted individually.
+14. When running inside a minimal container you may set
     `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` to suppress locale warnings.
+15. Use `DirectoryCountsComparer` to join Google and Microsoft maps and spot count mismatches.
+16. `CsvExporter` streams these results directly to disk or stdout using `StreamWriter`.
+17. A new feature file exercises the comparer so coverage remains high.
+18. Example scripts now show how to pipe mismatches to a CSV file.
+19. The README clarifies installing the .NET 9 preview SDK for this project.
+20. The new `MetricsCli` tool runs the comparison pipeline from the command line.
+21. Provide Microsoft and Google root IDs via `--ms-root` and `--google-root`.
+22. Pass Google credentials with `--google-auth` or set the `GOOGLE_AUTH` environment variable.
+23. Use `--output` to write mismatches to a CSV file.
+24. Limit concurrency with the `--max-dop` option.
+25. Step definitions now resolve services via Microsoft.Extensions.DependencyInjection.
+26. `ScenarioDependencies` registers mocks for pipeline BDD tests.
+27. A new feature checks that only mismatched entries reach the CSV export.
+28. Moq supplies scanner stubs so tests remain fast and isolated.
 
-14. Use `DirectoryCountsComparer` to join Google and Microsoft maps and spot count mismatches.
-15. `CsvExporter` streams these results directly to disk or stdout using `StreamWriter`.
-16. A new feature file exercises the comparer so coverage remains high.
-17. Example scripts now show how to pipe mismatches to a CSV file.
-18. The README clarifies installing the .NET 9 preview SDK for this project.
-19. The new `MetricsCli` tool runs the comparison pipeline from the command line.
-20. Provide Microsoft and Google root IDs via `--ms-root` and `--google-root`.
-21. Pass Google credentials with `--google-auth` or set the `GOOGLE_AUTH` environment variable.
-22. Use `--output` to write mismatches to a CSV file.
-23. Limit concurrency with the `--max-dop` option.
-24. Step definitions now resolve services via Microsoft.Extensions.DependencyInjection.
-25. `ScenarioDependencies` registers mocks for pipeline BDD tests.
-26. A new feature checks that only mismatched entries reach the CSV export.
-27. Moq supplies scanner stubs so tests remain fast and isolated.
+29. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
+30. Configure OAuth credentials for Microsoft and Google before running scanners.
+31. The CLI now supports environment variables for secret management.
 
-28. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
-29. Configure OAuth credentials for Microsoft and Google before running scanners.
-30. The CLI now supports environment variables for secret management.
-31. `DirectoryScanner` provides local folder enumeration for comparisons.
-32. `DirectoryComparer` checks two paths and reports missing or mismatched files.
-33. `DirectoryComparerWorker` logs these issues when run as a background service.
-34. A new feature file verifies the comparer end to end using temporary folders.
-35. Unit tests confirm the comparer interacts with the scanner through Moq.
 
 ## OAuth Configuration
 
@@ -128,6 +129,16 @@ var counts = await scanner.GetCountsAsync("/data");
 Console.WriteLine($"Files: {counts.FileCount}, Dirs: {counts.DirectoryCount}");
 ```
 
+### Recursive Directory Map Example
+```csharp
+var dirScanner = new DirectoryScanner(scanner, logger);
+var map = await dirScanner.ScanAsync("root-id", "root-name");
+foreach (var (path, c) in map)
+{
+    Console.WriteLine($"{path} => {c.FileCount} files");
+}
+```
+
 ### Coordinated Drive Example
 ```csharp
 var pairs = new[]{("gRoot","mRoot")};
@@ -136,6 +147,10 @@ var msMap = new ConcurrentDictionary<string, DirectoryCounts>();
 var worker = new MultiDriveCoordinatorWorker(gScanner, mScanner, pairs, googleMap, msMap, logger);
 await worker.StartAsync();
 ```
+
+`MultiDriveCoordinatorWorker` now uses `DirectoryScanner` under the hood so each
+directory in both drives is counted individually. The maps above will contain an
+entry for every nested path found beneath the provided roots.
 
 ## Command Line Interface
 
@@ -149,9 +164,11 @@ dotnet run --project MetricsCli -- \
   --max-dop 4 --follow-shortcuts
 ```
 
-**Options**
+`PipelineRunner` now relies on `DirectoryScanner` so nested folder counts are
+included in the CSV export.
 
-* `--ms-root` – Microsoft Graph path or drive ID to scan.
+### Options
+* `--ms-root` – Microsoft Graph path or ID to scan.
 * `--google-root` – Google Drive folder to compare.
 * `--google-auth` – path to OAuth credentials JSON.
 * `--output` – CSV file for mismatch results.
