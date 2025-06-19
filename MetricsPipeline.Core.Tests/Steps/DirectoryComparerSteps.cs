@@ -26,13 +26,13 @@ public class DirectoryComparerSteps : IDisposable
         Directory.CreateDirectory(_destination);
     }
 
-    [Given("the source directory contains \"(.*)\" with (\d+) bytes")]
+    [Given(@"the source directory contains ""(.*)"" with (\d+) bytes")]
     public void GivenSourceFile(string name, int bytes)
     {
         File.WriteAllBytes(Path.Combine(_source, name), new byte[bytes]);
     }
 
-    [Given("the destination directory contains \"(.*)\" with (\d+) bytes")]
+    [Given(@"the destination directory contains ""(.*)"" with (\d+) bytes")]
     public void GivenDestinationFile(string name, int bytes)
     {
         File.WriteAllBytes(Path.Combine(_destination, name), new byte[bytes]);
@@ -41,7 +41,7 @@ public class DirectoryComparerSteps : IDisposable
     [When("I compare the source and destination directories")]
     public async Task WhenICompare()
     {
-        var comparer = new DirectoryComparer(new DirectoryScanner());
+        var comparer = new DirectoryComparer(new NullScanner());
         _rows = (await comparer.CompareAsync(_source, _destination)).ToList();
     }
 
@@ -58,4 +58,13 @@ public class DirectoryComparerSteps : IDisposable
         if (Directory.Exists(_root))
             Directory.Delete(_root, true);
     }
+}
+
+internal sealed class NullScanner : IDriveScanner
+{
+    public Task<IEnumerable<DirectoryEntry>> GetDirectoriesAsync(string rootPath, CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<DirectoryEntry>>(Array.Empty<DirectoryEntry>());
+
+    public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
+        => Task.FromResult(new DirectoryCounts(0, 0, 0));
 }

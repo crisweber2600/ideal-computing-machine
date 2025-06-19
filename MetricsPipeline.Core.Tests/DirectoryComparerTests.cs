@@ -15,7 +15,7 @@ public class DirectoryComparerTests
     {
         var scanner = new Mock<IDriveScanner>();
         scanner.Setup(s => s.GetDirectoriesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-               .ReturnsAsync(Array.Empty<string>());
+               .ReturnsAsync(Array.Empty<DirectoryEntry>());
 
         var comparer = new DirectoryComparer(scanner.Object);
 
