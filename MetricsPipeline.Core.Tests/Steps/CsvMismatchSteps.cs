@@ -6,7 +6,6 @@ using FluentAssertions;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Reqnroll;
-using MetricsCli;
 using MetricsPipeline.Core;
 
 namespace MetricsPipeline.Core.Tests.Steps;
@@ -60,7 +59,7 @@ public class CsvMismatchSteps
     [When("the comparison pipeline runs")]
     public async Task WhenTheComparisonPipelineRuns()
     {
-        var options = new Options("m", "g", "out.csv", "cred.json", 1, false);
+        var options = new PipelineOptions("m", "g", "out.csv", "cred.json", 1, false);
         await PipelineRunner.RunAsync(options, _google, _microsoft, _stream, _loggerFactory);
         _stream.Position = 0;
         using var reader = new StreamReader(_stream);

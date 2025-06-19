@@ -47,9 +47,9 @@ public static class Program
     internal static RootCommand BuildCommand()
     {
         var def = CreateDefinition();
-        def.Command.SetHandler(async (string? mRoot, string? gRoot, string? auth, string outFile, int dop, bool follow, CancellationToken ct) =>
+        def.Command.SetHandler(async (string? mRoot, string? gRoot, string? auth, string outFile, int dop, bool follow) =>
         {
-            var options = new Options(
+            var options = new PipelineOptions(
                 mRoot ?? Environment.GetEnvironmentVariable("MS_ROOT") ?? throw new InvalidOperationException("MS root missing"),
                 gRoot ?? Environment.GetEnvironmentVariable("GOOGLE_ROOT") ?? throw new InvalidOperationException("Google root missing"),
                 outFile,
@@ -60,12 +60,12 @@ public static class Program
             var googleScanner = CreateGoogleScanner(options, loggerFactory.CreateLogger<GoogleDriveScanner>());
             var msScanner = CreateMicrosoftScanner(options, loggerFactory.CreateLogger<GraphScanner>());
             await using var stream = File.Create(options.Output);
-            await PipelineRunner.RunAsync(options, googleScanner, msScanner, stream, loggerFactory, ct);
+            await PipelineRunner.RunAsync(options, googleScanner, msScanner, stream, loggerFactory);
         }, def.Ms, def.Google, def.Auth, def.Output, def.Dop, def.Follow);
         return def.Command;
     }
 
-    public static Options ParseOptions(string[] args)
+    public static PipelineOptions ParseOptions(string[] args)
     {
         var def = CreateDefinition();
         var result = def.Command.Parse(args);
@@ -75,10 +75,10 @@ public static class Program
         var output = result.GetValueForOption(def.Output);
         var dop = result.GetValueForOption(def.Dop);
         var follow = result.GetValueForOption(def.Follow);
-        return new Options(msRoot, googleRoot, output!, auth, dop, follow);
+        return new PipelineOptions(msRoot, googleRoot, output!, auth, dop, follow);
     }
 
-    private static GoogleDriveScanner CreateGoogleScanner(Options options, ILogger<GoogleDriveScanner> logger)
+    private static GoogleDriveScanner CreateGoogleScanner(PipelineOptions options, ILogger<GoogleDriveScanner> logger)
     {
         var authFile = options.GoogleAuth ?? throw new InvalidOperationException("Google credentials missing");
         var credential = GoogleCredential.FromFile(authFile).CreateScoped(DriveService.Scope.DriveReadonly);
@@ -86,11 +86,10 @@ public static class Program
         return new GoogleDriveScanner(service, logger, followShortcuts: options.FollowShortcuts, maxConcurrency: options.MaxDop);
     }
 
-    private static GraphScanner CreateMicrosoftScanner(Options options, ILogger<GraphScanner> logger)
+    private static GraphScanner CreateMicrosoftScanner(PipelineOptions options, ILogger<GraphScanner> logger)
     {
         var client = new GraphServiceClient(new DefaultAzureCredential());
         return new GraphScanner(client, logger, options.MaxDop);
     }
 }
 
-public record Options(string MsRoot, string GoogleRoot, string Output, string? GoogleAuth, int MaxDop, bool FollowShortcuts);

@@ -1,11 +1,10 @@
 using Microsoft.Extensions.Logging;
-using MetricsPipeline.Core;
 
-namespace MetricsCli;
+namespace MetricsPipeline.Core;
 
 public static class PipelineRunner
 {
-    public static async Task RunAsync(Options options,
+    public static async Task RunAsync(PipelineOptions options,
         IDriveScanner googleScanner,
         IDriveScanner microsoftScanner,
         Stream output,
