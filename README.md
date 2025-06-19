@@ -1,7 +1,8 @@
 # Ideal Computing Machine
 
 This repository demonstrates a minimal setup for a worker service using **.NET 9**.
-The service, `DirectorySyncWorker`, processes background jobs that keep directories in sync across environments.
+The `DirectorySyncWorker` project starts as a simple logging stub. Replace it or
+register other hosted services to perform real work such as directory scanning.
 It now includes a reusable library called `MetricsPipeline.Core` that provides drive
 scanning and directory comparison helpers.
 A new `GraphScanner` leverages the Microsoft Graph SDK to enumerate OneDrive or
@@ -81,6 +82,16 @@ for further processing.
 35. A local `FileSystemScanner` test helper demonstrates implementing `IDriveScanner`.
 36. BDD tests were updated to assert on entry names rather than objects.
 37. Coverage now exceeds 80% with additional unit tests for workers and scanners.
+38. `DirectorySyncWorker` is only a logging stub. Register `MultiDriveCoordinatorWorker`
+    if you want background scans.
+39. Set `MS_ROOT` and `GOOGLE_ROOT` environment variables to provide the pair of
+    drive IDs processed by the coordinator.
+40. Provide an `OUTPUT_CSV` environment variable for the CLI to override the
+    default `mismatches.csv` path.
+41. Install the `reportgenerator` global tool to view coverage results:
+    `dotnet tool install --global dotnet-reportgenerator-globaltool`.
+42. Publish the CLI for reuse with `dotnet publish -c Release MetricsCli`.
+43. Set `MAX_DOP` to control API concurrency without editing the source code.
 
 
 ## OAuth Configuration
