@@ -11,6 +11,10 @@ The library now also offers a `GoogleDriveScanner` for listing folders in
 Google Drive. It shares the same concurrency limits and retry behaviour as the
 Graph implementation and can optionally resolve shortcuts.
 
+`DirectoryEntry` now exposes an optional `QuickXorHash` so callers can verify
+file contents when hashes are available. `GraphScanner` automatically populates
+this value for file items.
+
 `DirectoryScanner` is a new helper that walks child folders using a work queue
 and limits concurrency with a semaphore. It produces a map of counts for every
 directory discovered.
@@ -71,6 +75,11 @@ for further processing.
 29. Run `dotnet test --collect:"XPlat Code Coverage"` to verify coverage above 80%.
 30. Configure OAuth credentials for Microsoft and Google before running scanners.
 31. The CLI now supports environment variables for secret management.
+32. `DirectoryEntry` includes a `QuickXorHash` for integrity checks.
+33. `GraphScanner` populates this hash for file items automatically.
+34. `DirectoryComparer` now uses directory names from these entries.
+35. A local `FileSystemScanner` test helper demonstrates implementing `IDriveScanner`.
+36. BDD tests were updated to assert on entry names rather than objects.
 
 
 ## OAuth Configuration
@@ -215,4 +224,5 @@ Additional notes:
 4. Run `dotnet build` before testing if feature files change so the generated bindings stay in sync.
 5. Use `reportgenerator` to convert the Cobertura file to HTML and confirm coverage visually.
 6. The scanner's concurrency can be tuned by passing a different `maxConcurrency` when constructing `DirectoryScanner`.
+
 

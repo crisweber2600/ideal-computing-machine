@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
 using FluentAssertions;
 using Reqnroll;
 using MetricsPipeline.Core;
@@ -28,11 +29,11 @@ public class DirectoryComparerSteps : IDisposable
     }
 
     [Given("the source directory contains \"(.*)\" with (\\d+) bytes")]
+
     public void GivenSourceFile(string name, int bytes)
     {
         File.WriteAllBytes(Path.Combine(_source, name), new byte[bytes]);
     }
-
     [Given("the destination directory contains \"(.*)\" with (\\d+) bytes")]
     public void GivenDestinationFile(string name, int bytes)
     {
@@ -54,7 +55,7 @@ public class DirectoryComparerSteps : IDisposable
         _rows.Should().ContainSingle(r => r is SizeMismatchRow);
     }
 
-    public void Dispose()
+public void Dispose()
     {
         if (Directory.Exists(_root))
             Directory.Delete(_root, true);
@@ -69,4 +70,5 @@ internal sealed class FileSystemDriveScanner : IDriveScanner
 
     public Task<DirectoryCounts> GetCountsAsync(string path, CancellationToken cancellationToken = default)
         => Task.FromResult(new DirectoryCounts(0, 0, 0));
+
 }
