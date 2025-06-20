@@ -129,6 +129,11 @@ dotnet test
 66. Graph requests failing with 403 usually mean `Files.Read.All` or `Sites.Read.All` consent was not granted.
 67. Azure-related validation errors indicate one of `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` or `AZURE_CLIENT_SECRET` is unset.
 68. Use `--google-root root` to scan your own My Drive; for a Shared Drive supply its root ID instead.
+69. An `unauthorized_client` error means the service account lacks Drive access or required scopes.
+70. Share the target folders with the service account or enable domain-wide delegation.
+71. Ensure `GOOGLE_AUTH` points to the JSON key downloaded from Google Cloud.
+72. Delete cached tokens under `~/.credentials` if you switch accounts to avoid stale authorization.
+73. Run the validator before scanning to confirm your environment is ready.
 ```csharp
 if (!EnvironmentValidator.Validate(out var errors))
 {
