@@ -113,6 +113,12 @@ dotnet test
 51. Populate the `Pipeline` section in `appsettings.json` with `MsRoot`, `GoogleRoot`, `GoogleAuth`, `Output` and `MaxDop`.
 52. The worker uses these settings to spin up scanners and export a CSV automatically.
 53. Run `dotnet run --project DirectorySyncWorker` after updating the settings to process both drives end to end.
+
+54. `PipelineOptions` now includes a parameterless constructor so it can be bound directly from configuration using `IOptions<PipelineOptions>`.
+55. Set `MAX_DOP` or edit `appsettings.json` to tune concurrency without recompiling.
+56. Mount your `appsettings.json` when running in Docker so the worker picks up the correct pipeline configuration.
+57. Remember to pass `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` in container environments to silence locale warnings.
+58. If you encounter a `MissingMethodException` for `PipelineOptions`, clean and rebuild the solution to ensure the latest binaries are used.
 Example `appsettings.json` configuration:
 ```json
 {
