@@ -34,6 +34,14 @@ for further processing.
 - `Microsoft.Graph` NuGet package for Graph scanning features
 - `Google.Apis.Drive.v3` package for Google Drive integration
 
+## Quick Start
+Run the setup script then build and test the solution:
+```bash
+bash dotnet-install.sh --version latest --channel 9.0
+dotnet restore
+dotnet test
+```
+
 ## Usage
 1. Restore dependencies with `dotnet restore`.
 2. Build the solution using `dotnet build`.
@@ -105,6 +113,20 @@ for further processing.
 51. Populate the `Pipeline` section in `appsettings.json` with `MsRoot`, `GoogleRoot`, `GoogleAuth`, `Output` and `MaxDop`.
 52. The worker uses these settings to spin up scanners and export a CSV automatically.
 53. Run `dotnet run --project DirectorySyncWorker` after updating the settings to process both drives end to end.
+Example `appsettings.json` configuration:
+```json
+{
+  "Pipeline": {
+    "MsRoot": "<drive-id>",
+    "GoogleRoot": "<folder-id>",
+    "GoogleAuth": "creds.json",
+    "Output": "mismatches.csv",
+    "MaxDop": 4,
+    "FollowShortcuts": false
+  }
+}
+```
+
 
 
 ## OAuth Configuration
@@ -142,8 +164,13 @@ var service = new DriveService(new BaseClientService.Initializer());
 var scanner = new GoogleDriveScanner(service, logger, followShortcuts: true);
 var folders = await scanner.GetDirectoriesAsync("{folderId}");
 ```
-The Google implementation also uses a semaphore to limit concurrent requests and
 applies exponential back-off when the Drive API returns 429 or 503 errors.
+### Local File System Example
+```csharp
+var scanner = new FileSystemDriveScanner("/tmp", logger);
+var counts = await scanner.GetCountsAsync("/");
+```
+
 
 This solution serves as a starting point for building background services.
 Refer to the [.NET 9 release notes](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-9) for new features.
@@ -155,6 +182,12 @@ Feel free to extend it with your own business logic and tests.
   `IDirectoryComparer` plus model records for comparison results.
 - Worker classes reside under `MetricsPipeline.Core/Infrastructure/Workers` so
   they can be shared across services.
+The library includes several workers:
+- **DriveScannerWorker** – schedules background scans for a single platform.
+- **DirectoryComparerWorker** – compares two local folders and logs mismatches.
+- **MultiDriveCoordinatorWorker** – runs Microsoft and Google scans concurrently.
+- **PipelineWorker** – executes the full comparison pipeline from configuration.
+
 
 ### Directory Scanning Example
 ```csharp
@@ -221,6 +254,12 @@ docker run --rm \
   -e AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
   -e GOOGLE_AUTH=/secrets/creds.json \
   metrics --ms-root <drive-id> --google-root <folder-id>
+```
+The container entrypoint defaults to the CLI. You can mount an appsettings file to avoid passing long command arguments:
+```bash
+docker run --rm -v $(pwd)/appsettings.json:/app/appsettings.json \
+  -e AZURE_CLIENT_ID -e AZURE_TENANT_ID -e AZURE_CLIENT_SECRET \
+  metrics
 ```
 
 Ensure your credentials file is mounted or baked into the container image. When
