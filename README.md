@@ -119,6 +119,24 @@ dotnet test
 56. Mount your `appsettings.json` when running in Docker so the worker picks up the correct pipeline configuration.
 57. Remember to pass `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` in container environments to silence locale warnings.
 58. If you encounter a `MissingMethodException` for `PipelineOptions`, clean and rebuild the solution to ensure the latest binaries are used.
+59. `EnvironmentValidator` checks that required environment variables are present before any scans run.
+60. `MetricsCli` prints clear errors when `MS_ROOT`, `GOOGLE_ROOT` or `GOOGLE_AUTH` are missing.
+61. The validator confirms the Google credentials file exists and reports the path when it does not.
+62. Azure authentication requires `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_CLIENT_SECRET`.
+63. The CLI exits early if validation fails so you can fix the configuration and retry.
+64. A missing credentials file triggers "Google credentials not found"; ensure the path in `GOOGLE_AUTH` is correct.
+65. If Google APIs return a 403 error, confirm the service account has access to the target Drive or folder.
+66. Graph requests failing with 403 usually mean `Files.Read.All` or `Sites.Read.All` consent was not granted.
+67. Azure-related validation errors indicate one of `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` or `AZURE_CLIENT_SECRET` is unset.
+68. Use `--google-root root` to scan your own My Drive; for a Shared Drive supply its root ID instead.
+```csharp
+if (!EnvironmentValidator.Validate(out var errors))
+{
+    foreach (var e in errors)
+        Console.Error.WriteLine(e);
+    return;
+}
+```
 Example `appsettings.json` configuration:
 ```json
 {

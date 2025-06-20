@@ -1,3 +1,4 @@
+using System;
 using System.CommandLine;
 using Azure.Identity;
 using Google.Apis.Auth.OAuth2;
@@ -49,6 +50,14 @@ public static class Program
         var def = CreateDefinition();
         def.Command.SetHandler(async (string? mRoot, string? gRoot, string? auth, string outFile, int dop, bool follow) =>
         {
+            if (!EnvironmentValidator.Validate(out var errs))
+            {
+                foreach (var err in errs)
+                {
+                    Console.Error.WriteLine(err);
+                }
+                return;
+            }
             var options = new PipelineOptions(
                 mRoot ?? Environment.GetEnvironmentVariable("MS_ROOT") ?? throw new InvalidOperationException("MS root missing"),
                 gRoot ?? Environment.GetEnvironmentVariable("GOOGLE_ROOT") ?? throw new InvalidOperationException("Google root missing"),
